@@ -1,0 +1,374 @@
+{
+  "company": {
+    "name": "Contoso Mutual Insurance (demo)",
+    "claims_phone": "1-800-555-0199",
+    "service_phone": "1-800-555-0123",
+    "portal_url": "https://portal.contoso-mutual.example.com"
+  },
+  "customers": [
+    {
+      "customer_id": "C1001",
+      "first_name": "Maria",
+      "last_name": "Gonzalez",
+      "date_of_birth": "1985-03-14",
+      "email": "maria.gonzalez@example.com",
+      "phone": "312-555-0142",
+      "address": {"street": "1840 N Clark St", "city": "Chicago", "state": "IL", "zip": "60614"},
+      "preferred_contact": "phone"
+    },
+    {
+      "customer_id": "C1002",
+      "first_name": "James",
+      "last_name": "Carter",
+      "date_of_birth": "1972-11-02",
+      "email": "jcarter@example.com",
+      "phone": "512-555-0177",
+      "address": {"street": "604 Brazos St", "city": "Austin", "state": "TX", "zip": "78701"},
+      "preferred_contact": "email"
+    },
+    {
+      "customer_id": "C1003",
+      "first_name": "Priya",
+      "last_name": "Raman",
+      "date_of_birth": "1990-07-21",
+      "email": "priya.raman@example.com",
+      "phone": "206-555-0110",
+      "address": {"street": "500 Mercer St Apt 12B", "city": "Seattle", "state": "WA", "zip": "98109"},
+      "preferred_contact": "text"
+    },
+    {
+      "customer_id": "C1004",
+      "first_name": "David",
+      "last_name": "Kim",
+      "date_of_birth": "1968-01-30",
+      "email": "david.kim@example.com",
+      "phone": "404-555-0163",
+      "address": {"street": "1100 Peachtree St NE", "city": "Atlanta", "state": "GA", "zip": "30309"},
+      "preferred_contact": "phone"
+    },
+    {
+      "customer_id": "C1005",
+      "first_name": "Emily",
+      "last_name": "Johnson",
+      "date_of_birth": "1995-09-05",
+      "email": "emily.johnson@example.com",
+      "phone": "212-555-0188",
+      "address": {"street": "3080 Broadway", "city": "New York", "state": "NY", "zip": "10027"},
+      "preferred_contact": "email"
+    }
+  ],
+  "policies": [
+    {
+      "policy_number": "AUT-100234",
+      "customer_id": "C1001",
+      "line": "auto",
+      "product": "Auto Plus",
+      "status": "active",
+      "effective_date": "2026-02-01",
+      "expiration_date": "2027-02-01",
+      "insured_items": [
+        {"type": "vehicle", "description": "2022 Toyota RAV4 XLE", "vin_last6": "R48213"}
+      ],
+      "drivers": ["Maria Gonzalez"],
+      "coverages": {
+        "liability": {"limit": "$100,000 / $300,000 bodily injury, $100,000 property damage", "deductible": 0},
+        "collision": {"limit": "Actual cash value", "deductible": 500},
+        "comprehensive": {"limit": "Actual cash value", "deductible": 250},
+        "glass": {"limit": "Full glass repair or replacement", "deductible": 0},
+        "uninsured_motorist": {"limit": "$100,000 / $300,000", "deductible": 0},
+        "medical_payments": {"limit": "$5,000 per person", "deductible": 0},
+        "rental_reimbursement": {"limit": "$40 per day, up to $1,200", "deductible": 0},
+        "roadside_assistance": {"limit": "Towing up to 25 miles, jump-starts, lockouts", "deductible": 0}
+      },
+      "billing": {
+        "premium": 1428.00,
+        "frequency": "monthly",
+        "installment_amount": 119.00,
+        "next_due_date": "2026-11-01",
+        "amount_due": 119.00,
+        "past_due_amount": 0.00,
+        "autopay": true,
+        "payment_method": "Checking account ending 4821",
+        "last_payment": {"date": "2026-10-01", "amount": 119.00}
+      }
+    },
+    {
+      "policy_number": "HOM-200871",
+      "customer_id": "C1001",
+      "line": "home",
+      "product": "HomeShield HO-3",
+      "status": "active",
+      "effective_date": "2026-04-15",
+      "expiration_date": "2027-04-15",
+      "insured_items": [
+        {"type": "dwelling", "description": "Single-family home, 1840 N Clark St, Chicago IL", "year_built": 1998}
+      ],
+      "coverages": {
+        "dwelling": {"limit": "$450,000", "deductible": 1000},
+        "other_structures": {"limit": "$45,000", "deductible": 1000},
+        "personal_property": {"limit": "$225,000", "deductible": 1000},
+        "loss_of_use": {"limit": "$90,000", "deductible": 0},
+        "personal_liability": {"limit": "$300,000", "deductible": 0},
+        "medical_payments": {"limit": "$5,000 per person", "deductible": 0},
+        "water_backup": {"limit": "$10,000", "deductible": 1000},
+        "wind_hail": {"limit": "Up to dwelling limit", "deductible": 9000, "deductible_note": "2% of dwelling coverage"}
+      },
+      "exclusions": ["flood", "earthquake", "wear_and_tear", "mold", "pests"],
+      "billing": {
+        "premium": 1896.00,
+        "frequency": "annual",
+        "installment_amount": 1896.00,
+        "next_due_date": "2027-04-15",
+        "amount_due": 0.00,
+        "past_due_amount": 0.00,
+        "autopay": false,
+        "payment_method": "Paid through mortgage escrow",
+        "last_payment": {"date": "2026-04-10", "amount": 1896.00}
+      }
+    },
+    {
+      "policy_number": "AUT-100512",
+      "customer_id": "C1002",
+      "line": "auto",
+      "product": "Auto Standard",
+      "status": "active",
+      "effective_date": "2026-06-10",
+      "expiration_date": "2026-12-10",
+      "insured_items": [
+        {"type": "vehicle", "description": "2019 Ford F-150 XLT", "vin_last6": "C11907"},
+        {"type": "vehicle", "description": "2021 Honda Civic EX", "vin_last6": "H56220"}
+      ],
+      "drivers": ["James Carter", "Linda Carter"],
+      "coverages": {
+        "liability": {"limit": "$50,000 / $100,000 bodily injury, $50,000 property damage", "deductible": 0},
+        "collision": {"limit": "Actual cash value", "deductible": 1000},
+        "comprehensive": {"limit": "Actual cash value", "deductible": 500},
+        "uninsured_motorist": {"limit": "$50,000 / $100,000", "deductible": 0},
+        "roadside_assistance": {"limit": "Towing up to 15 miles", "deductible": 0}
+      },
+      "billing": {
+        "premium": 1104.00,
+        "frequency": "monthly",
+        "installment_amount": 184.00,
+        "next_due_date": "2026-11-10",
+        "amount_due": 368.00,
+        "past_due_amount": 184.00,
+        "grace_period_ends": "2026-11-09",
+        "autopay": false,
+        "payment_method": "Visa ending 7730",
+        "last_payment": {"date": "2026-09-08", "amount": 184.00}
+      }
+    },
+    {
+      "policy_number": "REN-300045",
+      "customer_id": "C1003",
+      "line": "renters",
+      "product": "Renters Essentials HO-4",
+      "status": "active",
+      "effective_date": "2026-01-01",
+      "expiration_date": "2027-01-01",
+      "insured_items": [
+        {"type": "residence", "description": "Apartment 12B, 500 Mercer St, Seattle WA"}
+      ],
+      "coverages": {
+        "personal_property": {"limit": "$30,000", "deductible": 500},
+        "loss_of_use": {"limit": "$9,000", "deductible": 0},
+        "personal_liability": {"limit": "$100,000", "deductible": 0},
+        "medical_payments": {"limit": "$1,000 per person", "deductible": 0}
+      },
+      "exclusions": ["flood", "earthquake", "wear_and_tear", "mold", "pests"],
+      "billing": {
+        "premium": 192.00,
+        "frequency": "monthly",
+        "installment_amount": 16.00,
+        "next_due_date": "2026-11-01",
+        "amount_due": 16.00,
+        "past_due_amount": 0.00,
+        "autopay": true,
+        "payment_method": "Mastercard ending 0915",
+        "last_payment": {"date": "2026-10-01", "amount": 16.00}
+      }
+    },
+    {
+      "policy_number": "LIF-400019",
+      "customer_id": "C1004",
+      "line": "life",
+      "product": "20-Year Term Life",
+      "status": "active",
+      "effective_date": "2015-03-01",
+      "expiration_date": "2035-03-01",
+      "insured_items": [
+        {"type": "insured_person", "description": "David Kim"}
+      ],
+      "beneficiaries": [{"name": "S. Kim", "relationship": "spouse", "share_percent": 100}],
+      "coverages": {
+        "death_benefit": {"limit": "$750,000", "deductible": 0},
+        "accelerated_death_benefit": {"limit": "Up to 50% of death benefit for terminal illness", "deductible": 0}
+      },
+      "billing": {
+        "premium": 864.00,
+        "frequency": "monthly",
+        "installment_amount": 72.00,
+        "next_due_date": "2026-11-01",
+        "amount_due": 72.00,
+        "past_due_amount": 0.00,
+        "autopay": true,
+        "payment_method": "Checking account ending 2290",
+        "last_payment": {"date": "2026-10-01", "amount": 72.00}
+      }
+    },
+    {
+      "policy_number": "AUT-100777",
+      "customer_id": "C1004",
+      "line": "auto",
+      "product": "Auto Standard",
+      "status": "cancelled",
+      "status_reason": "Cancelled for non-payment",
+      "effective_date": "2025-08-15",
+      "expiration_date": "2026-08-15",
+      "cancellation_date": "2026-07-20",
+      "insured_items": [
+        {"type": "vehicle", "description": "2017 Subaru Outback", "vin_last6": "S30418"}
+      ],
+      "drivers": ["David Kim"],
+      "coverages": {
+        "liability": {"limit": "$50,000 / $100,000 bodily injury, $25,000 property damage", "deductible": 0},
+        "collision": {"limit": "Actual cash value", "deductible": 1000},
+        "comprehensive": {"limit": "Actual cash value", "deductible": 500}
+      },
+      "billing": {
+        "premium": 1320.00,
+        "frequency": "monthly",
+        "installment_amount": 110.00,
+        "next_due_date": null,
+        "amount_due": 0.00,
+        "past_due_amount": 0.00,
+        "autopay": false,
+        "payment_method": null,
+        "last_payment": {"date": "2026-05-15", "amount": 110.00}
+      }
+    },
+    {
+      "policy_number": "AUT-100903",
+      "customer_id": "C1005",
+      "line": "auto",
+      "product": "Auto Plus",
+      "status": "pending",
+      "status_reason": "Policy issued, coverage begins on the effective date",
+      "effective_date": "2026-11-01",
+      "expiration_date": "2027-05-01",
+      "insured_items": [
+        {"type": "vehicle", "description": "2024 Hyundai Ioniq 5", "vin_last6": "I50921"}
+      ],
+      "drivers": ["Emily Johnson"],
+      "coverages": {
+        "liability": {"limit": "$100,000 / $300,000 bodily injury, $100,000 property damage", "deductible": 0},
+        "collision": {"limit": "Actual cash value", "deductible": 500},
+        "comprehensive": {"limit": "Actual cash value", "deductible": 500},
+        "glass": {"limit": "Full glass repair or replacement", "deductible": 100},
+        "rental_reimbursement": {"limit": "$50 per day, up to $1,500", "deductible": 0},
+        "roadside_assistance": {"limit": "Towing up to 50 miles, EV mobile charging", "deductible": 0}
+      },
+      "billing": {
+        "premium": 1080.00,
+        "frequency": "monthly",
+        "installment_amount": 180.00,
+        "next_due_date": "2026-11-01",
+        "amount_due": 180.00,
+        "past_due_amount": 0.00,
+        "autopay": true,
+        "payment_method": "Visa ending 3307",
+        "last_payment": null
+      }
+    }
+  ],
+  "claims": [
+    {
+      "claim_number": "CLM-2026-000118",
+      "policy_number": "AUT-100234",
+      "incident_type": "collision",
+      "coverage": "collision",
+      "incident_date": "2026-09-12",
+      "reported_date": "2026-09-12",
+      "description": "Rear-ended at a stop light on Lake Shore Drive. Rear bumper and tailgate damaged. Vehicle drivable.",
+      "status": "estimate_approved",
+      "adjuster": {"name": "Kevin Brooks", "phone": "1-800-555-0199 ext. 4412"},
+      "deductible": 500,
+      "estimate_amount": 3850.00,
+      "paid_amount": 0.00,
+      "next_step": "Repair is scheduled at Northside Collision Center on 2026-10-29. Payment goes directly to the shop after repairs are completed.",
+      "timeline": [
+        {"date": "2026-09-12", "event": "Claim reported by phone"},
+        {"date": "2026-09-14", "event": "Assigned to adjuster Kevin Brooks"},
+        {"date": "2026-09-20", "event": "Vehicle inspected at Northside Collision Center"},
+        {"date": "2026-10-02", "event": "Repair estimate of $3,850 approved"}
+      ],
+      "notes": []
+    },
+    {
+      "claim_number": "CLM-2026-000087",
+      "policy_number": "HOM-200871",
+      "incident_type": "hail",
+      "coverage": "wind_hail",
+      "incident_date": "2026-05-20",
+      "reported_date": "2026-05-22",
+      "description": "Hail storm damaged roof shingles and two skylights.",
+      "status": "payment_issued",
+      "adjuster": {"name": "Angela Ruiz", "phone": "1-800-555-0199 ext. 3108"},
+      "deductible": 9000,
+      "estimate_amount": 21400.00,
+      "paid_amount": 12400.00,
+      "next_step": "Final payment of $12,400 was issued on 2026-07-08. The claim will close 30 days after repairs are confirmed.",
+      "timeline": [
+        {"date": "2026-05-22", "event": "Claim reported online"},
+        {"date": "2026-05-23", "event": "Assigned to adjuster Angela Ruiz"},
+        {"date": "2026-06-02", "event": "Roof inspection completed"},
+        {"date": "2026-06-18", "event": "Estimate of $21,400 approved, less $9,000 wind/hail deductible"},
+        {"date": "2026-07-08", "event": "Payment of $12,400 issued by direct deposit"}
+      ],
+      "notes": []
+    },
+    {
+      "claim_number": "CLM-2026-000131",
+      "policy_number": "REN-300045",
+      "incident_type": "theft",
+      "coverage": "personal_property",
+      "incident_date": "2026-10-03",
+      "reported_date": "2026-10-04",
+      "description": "Laptop and camera stolen from apartment after a break-in.",
+      "status": "under_investigation",
+      "adjuster": {"name": "Marcus Lee", "phone": "1-800-555-0199 ext. 2270"},
+      "deductible": 500,
+      "estimate_amount": 2650.00,
+      "paid_amount": 0.00,
+      "next_step": "Waiting for the police report number and purchase receipts. Upload them in the portal or read the police report number to an agent.",
+      "timeline": [
+        {"date": "2026-10-04", "event": "Claim reported through the mobile app"},
+        {"date": "2026-10-05", "event": "Assigned to adjuster Marcus Lee"},
+        {"date": "2026-10-09", "event": "Requested police report and receipts"}
+      ],
+      "notes": []
+    },
+    {
+      "claim_number": "CLM-2025-000452",
+      "policy_number": "AUT-100512",
+      "incident_type": "windshield",
+      "coverage": "comprehensive",
+      "incident_date": "2025-12-01",
+      "reported_date": "2025-12-01",
+      "description": "Rock chip turned into a crack across the windshield of the Honda Civic.",
+      "status": "closed",
+      "adjuster": {"name": "Angela Ruiz", "phone": "1-800-555-0199 ext. 3108"},
+      "deductible": 500,
+      "estimate_amount": 640.00,
+      "paid_amount": 140.00,
+      "next_step": "No further action. Claim closed.",
+      "timeline": [
+        {"date": "2025-12-01", "event": "Claim reported"},
+        {"date": "2025-12-03", "event": "Windshield replaced"},
+        {"date": "2025-12-10", "event": "Payment of $140 issued to glass vendor, claim closed"}
+      ],
+      "notes": []
+    }
+  ]
+}
