@@ -20,6 +20,9 @@ Typical flow: find_customer or ask for the policy number -> verify_customer_iden
 Every result has a short 'summary' you can read aloud. Never read out full account numbers.
 """
 
+# Module level so the postponed annotations on the tool functions can resolve it.
+PolicyNo = Annotated[str, Field(description="Policy number such as AUT-100234, HOM-200871 or REN-300045. Spaces or missing dashes are fine.")]
+
 
 def _safe(fn: Callable[[], dict[str, Any]]) -> dict[str, Any]:
     try:
@@ -30,8 +33,6 @@ def _safe(fn: Callable[[], dict[str, Any]]) -> dict[str, Any]:
 
 def build_mcp(service: InsuranceService) -> FastMCP:
     mcp = FastMCP(name="contoso-insurance", instructions=INSTRUCTIONS)
-
-    PolicyNo = Annotated[str, Field(description="Policy number such as AUT-100234, HOM-200871 or REN-300045. Spaces or missing dashes are fine.")]
 
     @mcp.tool
     def find_customer(
