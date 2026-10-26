@@ -93,6 +93,11 @@ azd up                               # pick subscription + region
 azd env get-value MCP_ENDPOINT       # e.g. https://ca-insurance-xxxx.<region>.azurecontainerapps.io/mcp
 ```
 
+Telemetry goes to the Application Insights resource `appi-<token>` (`azd env get-value APPLICATIONINSIGHTS_NAME`).
+Requests and dependencies are collected automatically, and each MCP tool call appears as an
+`mcp.tool <name>` span, marked failed when the tool returns an error. Locally, telemetry is off unless
+`APPLICATIONINSIGHTS_CONNECTION_STRING` is set.
+
 ### Continuous deployment from GitHub
 
 ```bash
@@ -121,8 +126,9 @@ app/
   services.py      Business logic (shared by REST + MCP)
   repository.py    In-memory store loaded from data/seed.json
   security.py      Optional x-api-key check (pure ASGI, streaming-safe)
+  telemetry.py     Application Insights setup and per-tool MCP spans
   data/seed.json   Fictional customers, policies, billing, claims
-infra/             Bicep for Container Apps, ACR, Log Analytics, managed identity
+infra/             Bicep for Container Apps, ACR, Log Analytics, Application Insights, managed identity
 docs/              Foundry agent instructions and demo script
 tests/             pytest: service, REST and MCP tests
 ```

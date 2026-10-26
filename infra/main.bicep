@@ -37,5 +37,6 @@ module resources 'resources.bicep' = {
 output AZURE_RESOURCE_GROUP string = rg.name
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = resources.outputs.registryLoginServer
 output SERVICE_API_NAME string = resources.outputs.appName
+output APPLICATIONINSIGHTS_NAME string = resources.outputs.appInsightsName
 output SERVICE_API_URI string = resources.outputs.appUri
 output MCP_ENDPOINT string = '${resources.outputs.appUri}/mcp'

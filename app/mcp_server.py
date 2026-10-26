@@ -12,6 +12,7 @@ from fastmcp import FastMCP
 from pydantic import Field
 
 from .services import InsuranceService, InvalidRequestError, NotFoundError
+from .telemetry import ToolTracingMiddleware
 
 INSTRUCTIONS = """\
 Tools for Contoso Mutual Insurance policy servicing and claims.
@@ -33,6 +34,7 @@ def _safe(fn: Callable[[], dict[str, Any]]) -> dict[str, Any]:
 
 def build_mcp(service: InsuranceService) -> FastMCP:
     mcp = FastMCP(name="contoso-insurance", instructions=INSTRUCTIONS)
+    mcp.add_middleware(ToolTracingMiddleware())
 
     @mcp.tool
     def find_customer(

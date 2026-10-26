@@ -14,6 +14,17 @@ resource logs 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   }
 }
 
+resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
+  name: 'appi-${token}'
+  location: location
+  tags: tags
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    WorkspaceResourceId: logs.id
+  }
+}
+
 resource registry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   name: 'cr${token}'
   location: location
@@ -54,8 +65,10 @@ resource env 'Microsoft.App/managedEnvironments@2024-03-01' = {
   }
 }
 
-var secrets = empty(apiKey) ? [] : [ { name: 'api-key', value: apiKey } ]
-var envVars = empty(apiKey) ? [] : [ { name: 'API_KEY', secretRef: 'api-key' } ]
+var appInsightsSecret = [ { name: 'appinsights-connection-string', value: appInsights.properties.ConnectionString } ]
+var appInsightsEnv = [ { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', secretRef: 'appinsights-connection-string' } ]
+var secrets = concat(appInsightsSecret, empty(apiKey) ? [] : [ { name: 'api-key', value: apiKey } ])
+var envVars = concat(appInsightsEnv, empty(apiKey) ? [] : [ { name: 'API_KEY', secretRef: 'api-key' } ])
 
 resource app 'Microsoft.App/containerApps@2024-03-01' = {
   name: 'ca-insurance-${take(token, 8)}'
@@ -98,4 +111,5 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
 
 output registryLoginServer string = registry.properties.loginServer
 output appName string = app.name
+output appInsightsName string = appInsights.name
 output appUri string = 'https://${app.properties.configuration.ingress.fqdn}'

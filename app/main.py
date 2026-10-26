@@ -11,6 +11,7 @@ from .api import router
 from .mcp_server import build_mcp
 from .security import ApiKeyMiddleware
 from .services import InsuranceService, InvalidRequestError, NotFoundError
+from .telemetry import configure_telemetry
 
 __version__ = "1.0.0"
 
@@ -53,3 +54,4 @@ def create_app(service: InsuranceService | None = None) -> FastAPI:
 
 
 app = create_app()
+configure_telemetry(app)
