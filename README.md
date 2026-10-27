@@ -198,7 +198,9 @@ tests/             pytest: service, REST, MCP, telemetry and voice relay tests
 ## Notes
 
 - All data is fictional. Claims and callbacks you create are stored in memory and reset on restart;
-  the app runs as a single replica for that reason. Replace `InMemoryRepository` with a Cosmos DB or
+  the app runs as at most one replica for that reason. It scales to zero when idle, so the first
+  visitor (or the agent's first tool call) after a quiet spell waits a few seconds for it to start,
+  and in-memory data and call counts reset then. Replace `InMemoryRepository` with a Cosmos DB or
   SQL implementation for anything beyond a demo.
 - Identity verification is a demo pattern (DOB + ZIP), not production-grade authentication.
 - The voice page is public and every call costs money (realtime model, neural voice and avatar minutes).

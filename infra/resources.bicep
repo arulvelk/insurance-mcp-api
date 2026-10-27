@@ -112,8 +112,9 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
           resources: { cpu: json('0.5'), memory: '1Gi' }
         }
       ]
-      // The demo store is in memory, so keep one replica to keep newly filed claims consistent.
-      scale: { minReplicas: 1, maxReplicas: 1 }
+      // At most one replica: the demo store and the voice call limits are in memory.
+      // Scales to zero when idle to save cost; the first request after that waits a few seconds.
+      scale: { minReplicas: 0, maxReplicas: 1 }
     }
   }
 }

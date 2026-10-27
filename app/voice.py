@@ -76,7 +76,10 @@ class VoiceConfig:
 
 
 class SessionLimiter:
-    """In-memory limits; fine because the app runs as a single replica (see infra/resources.bicep)."""
+    """In-memory limits; fine because the app runs as at most one replica (see infra/resources.bicep).
+
+    Counts reset when the app scales to zero, so the daily cap is per wake-up rather than strict.
+    """
 
     def __init__(self, config: VoiceConfig, clock: Callable[[], float] = time.time) -> None:
         self.config = config
