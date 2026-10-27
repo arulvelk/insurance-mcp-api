@@ -9,6 +9,8 @@ business logic is exposed two ways:
 - **Public "Talk to Sam" page** at `/`, where anyone can talk to that voice agent, avatar included,
   from the browser
 
+![The "Talk to Sam" page during a live call: Sam, the avatar, asks the caller to verify their identity](docs/images/talk-to-sam.png)
+
 Every response includes a short `summary` written to be spoken aloud, which keeps realtime voice
 agents (e.g. `gpt-realtime`) fast and natural.
 
