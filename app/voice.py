@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import threading
 import time
@@ -24,6 +25,8 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 TOKEN_SCOPE = "https://ai.azure.com/.default"
 MAX_AUDIO_CHUNK = 256_000  # base64 chars, about 2.6 s of 24 kHz pcm16
 REDACTED_SESSION_KEYS = ("instructions", "tools")
+
+log = logging.getLogger("app.voice")
 
 
 @dataclass(frozen=True)
@@ -254,6 +257,7 @@ async def _pump(ws: WebSocket, upstream, max_seconds: int) -> str:
     async def from_azure():
         async for message in upstream:
             if isinstance(message, str):
+                _log_problem(message)
                 await ws.send_text(redact_server_event(message))
 
     tasks = {asyncio.create_task(from_browser(), name="browser"), asyncio.create_task(from_azure(), name="azure")}
@@ -272,6 +276,24 @@ async def _pump(ws: WebSocket, upstream, max_seconds: int) -> str:
     if exc is None or isinstance(exc, WebSocketDisconnect):
         return "browser_closed"
     return "upstream_closed"
+
+
+def _log_problem(raw: str) -> None:
+    """Record Voice Live errors and failed responses, which otherwise only reach the visitor's browser."""
+    if '"error"' not in raw and '"failed"' not in raw and '"incomplete"' not in raw:
+        return
+    try:
+        event = json.loads(raw)
+    except ValueError:
+        return
+    kind = event.get("type")
+    if kind == "error":
+        log.warning("Voice Live error: %s", json.dumps(event.get("error"))[:2000])
+    elif kind == "response.done":
+        response = event.get("response") or {}
+        if response.get("status") not in ("completed", "cancelled"):
+            log.warning("Voice Live response %s: %s", response.get("status"),
+                        json.dumps(response.get("status_details"))[:2000])
 
 
 async def _end(ws: WebSocket, reason: str, message: str) -> None:

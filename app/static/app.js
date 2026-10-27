@@ -87,6 +87,7 @@ class Call {
   }
 
   onEvent(event) {
+    if (!event.type.endsWith(".delta")) console.debug("[voice]", event.type, event);
     switch (event.type) {
       case "demo.ready":
         this.startTimer(event.max_session_seconds);
@@ -120,11 +121,25 @@ class Call {
         if (this.player) this.player.stop();
         caption.textContent = "Listening…";
         break;
+      case "response.done": {
+        const r = event.response || {};
+        if (r.status && r.status !== "completed" && r.status !== "cancelled") {
+          this.showProblem(`Sam couldn't answer (${r.status})`, r.status_details);
+        }
+        break;
+      }
       case "error":
-        console.warn("Voice Live error", event.error);
-        statusLine.textContent = (event.error && event.error.message) || "Something went wrong.";
+        this.showProblem("Voice service error", event.error);
         break;
     }
+  }
+
+  showProblem(title, details) {
+    console.warn(title, details);
+    const d = details || {};
+    const reason = d.message || (d.error && d.error.message) || d.reason || d.type || "";
+    statusLine.textContent = reason ? `${title}: ${reason}` : `${title}.`;
+    caption.textContent = "";
   }
 
   // --- avatar (WebRTC) ---
