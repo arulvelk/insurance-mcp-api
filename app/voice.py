@@ -140,6 +140,26 @@ def filter_client_event(raw: str) -> dict[str, Any] | None:
     return None
 
 
+def browser_audio_fix(raw: str) -> dict[str, Any] | None:
+    """Session override needed when the agent expects audio the browser can't send.
+
+    With server echo cancellation fed by a *client* reference, every input packet must interleave
+    the microphone with the audio being played. A browser sends plain mono microphone audio (and
+    cancels the echo itself), so the service would hear no speech; turn that mode off for this call.
+    """
+    if '"session.updated"' not in raw[:200] or '"echo_cancellation"' not in raw:
+        return None
+    try:
+        session = json.loads(raw).get("session") or {}
+        echo = ((session.get("audio") or {}).get("input") or {}).get("echo_cancellation") or {}
+    except (ValueError, AttributeError):
+        return None
+    if echo.get("reference_source") != "client":
+        return None
+    return {"type": "session.update",
+            "session": {"type": "realtime", "audio": {"input": {"echo_cancellation": None}}}}
+
+
 def redact_server_event(raw: str) -> str:
     """Keep the agent's prompt and tool definitions out of the visitor's browser."""
     if '"session.' not in raw[:200]:
@@ -242,6 +262,9 @@ async def _pump(ws: WebSocket, upstream, max_seconds: int) -> str:
         async for message in upstream:
             if isinstance(message, str):
                 _log_problem(message)
+                fix = browser_audio_fix(message)
+                if fix is not None:
+                    await upstream.send(json.dumps(fix))
                 await ws.send_text(redact_server_event(message))
 
     tasks = {asyncio.create_task(from_browser(), name="browser"), asyncio.create_task(from_azure(), name="azure")}

@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import create_app
-from app.voice import SessionLimiter, VoiceConfig, filter_client_event, redact_server_event
+from app.voice import SessionLimiter, VoiceConfig, browser_audio_fix, filter_client_event, redact_server_event
 
 CONFIG = VoiceConfig(endpoint="https://arul1.services.ai.azure.com", agent_name="sam-agent",
                      project_name="proj-default", max_session_seconds=5)
@@ -142,3 +142,14 @@ def test_relay_ends_call_at_time_limit(service):
         assert ws.receive_json()["type"] == "demo.ready"
         ended = ws.receive_json()
         assert ended["type"] == "demo.ended" and ended["reason"] == "time_limit"
+
+
+def test_client_reference_echo_cancellation_is_turned_off():
+    def updated(echo):
+        return json.dumps({"type": "session.updated", "session": {"audio": {"input": {"echo_cancellation": echo}}}})
+    fix = browser_audio_fix(updated({"type": "server_echo_cancellation", "reference_source": "client", "channels": 2}))
+    assert fix == {"type": "session.update",
+                   "session": {"type": "realtime", "audio": {"input": {"echo_cancellation": None}}}}
+    assert browser_audio_fix(updated({"type": "server_echo_cancellation", "reference_source": "server"})) is None
+    assert browser_audio_fix(updated(None)) is None
+    assert browser_audio_fix(json.dumps({"type": "response.done"})) is None

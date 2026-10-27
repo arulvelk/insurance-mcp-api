@@ -14,6 +14,7 @@ const placeholder = $("placeholder");
 
 const GREETING_WAIT_MS = 1500;
 const AVATAR_TIMEOUT_MS = 12000;
+const SESSION_SETTINGS_WAIT_MS = 3000;
 
 let call = null;
 
@@ -98,9 +99,15 @@ class Call {
         break;
       case "session.created":
       case "session.updated": {
+        // session.created carries service defaults; the agent's own settings (avatar included)
+        // follow in session.updated, so give that a moment before falling back to voice only.
         const ice = event.session && event.session.avatar && event.session.avatar.ice_servers;
         if (this.wantAvatar && ice && !this.pc) this.connectAvatar(ice);
-        else if (!this.pc && !this.micContext) this.goLive();
+        else if (!this.wantAvatar || event.type === "session.updated") {
+          if (!this.pc) this.goLive();
+        } else {
+          setTimeout(() => { if (!this.pc) this.goLive(); }, SESSION_SETTINGS_WAIT_MS);
+        }
         break;
       }
       case "session.avatar.connecting":
