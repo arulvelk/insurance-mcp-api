@@ -23,7 +23,7 @@ def test_upstream_url_uses_agent_mode():
 
 def test_session_update_only_sets_audio_and_avatar():
     session = CONFIG.session_update(avatar=True)["session"]
-    assert session["avatar"] == {"character": "lisa", "style": "casual-sitting"}
+    assert session["avatar"] == {"character": "meg", "style": "business"}
     assert "instructions" not in session and "voice" not in session
     assert "avatar" not in CONFIG.session_update(avatar=False)["session"]
 

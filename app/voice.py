@@ -36,8 +36,8 @@ class VoiceConfig:
     project_name: str = ""
     agent_version: str = ""
     api_version: str = "2026-07-15"
-    avatar_character: str = "lisa"
-    avatar_style: str = "casual-sitting"
+    avatar_character: str = "meg"
+    avatar_style: str = "business"
     max_session_seconds: int = 180
     max_concurrent_sessions: int = 2
     daily_session_limit: int = 40

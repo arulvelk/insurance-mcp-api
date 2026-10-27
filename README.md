@@ -129,7 +129,7 @@ Because the page is public, every call is capped. Defaults, overridable as conta
 | `VOICE_MAX_CONCURRENT_SESSIONS` | 2 | Simultaneous callers |
 | `VOICE_DAILY_SESSION_LIMIT` | 40 | Calls per UTC day, across all visitors |
 | `VOICE_HOURLY_SESSIONS_PER_VISITOR` | 4 | Calls per IP address per hour |
-| `VOICE_AVATAR_CHARACTER` / `VOICE_AVATAR_STYLE` | `lisa` / `casual-sitting` | Avatar shown on the page |
+| `VOICE_AVATAR_CHARACTER` / `VOICE_AVATAR_STYLE` | `meg` / `business` | Avatar shown on the page |
 | `VOICE_ALLOWED_ORIGINS` | (any) | Comma-separated origins allowed to open the WebSocket |
 
 If the avatar can't connect (for example on a network that blocks WebRTC), the call continues with
