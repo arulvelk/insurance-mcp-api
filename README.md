@@ -98,6 +98,43 @@ Requests and dependencies are collected automatically, and each MCP tool call ap
 `mcp.tool <name>` span, marked failed when the tool returns an error. Locally, telemetry is off unless
 `APPLICATIONINSIGHTS_CONNECTION_STRING` is set.
 
+### Public voice demo page
+
+The app's home page (`/`) is a public "Talk to Sam" page: visitors talk to your Foundry voice agent,
+with its avatar, straight from the browser. The browser streams microphone audio to `/voice/ws`, and
+the app relays it to Azure Voice Live in agent mode using its managed identity, so no Azure key or
+token ever reaches the visitor. The relay only forwards audio, interruptions and the avatar handshake;
+visitors can't change the agent's instructions or tools.
+
+Point it at your agent, then run `azd up` again:
+
+```bash
+azd env set FOUNDRY_RESOURCE_NAME  <foundry-resource>     # e.g. arul1
+azd env set FOUNDRY_RESOURCE_GROUP <its-resource-group>   # e.g. rg_aml
+azd env set FOUNDRY_PROJECT_NAME   <project>              # e.g. proj-default
+azd env set VOICE_AGENT_NAME       <agent-name>
+azd up
+azd env get-value VOICE_DEMO_URL
+```
+
+This grants the app's identity **Azure AI User** and **Cognitive Services User** on the Foundry
+resource, so the account running `azd up` needs permission to assign roles there (Owner or User
+Access Administrator).
+
+Because the page is public, every call is capped. Defaults, overridable as container app env vars:
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `VOICE_MAX_SESSION_SECONDS` | 180 | Calls end automatically after this long |
+| `VOICE_MAX_CONCURRENT_SESSIONS` | 2 | Simultaneous callers |
+| `VOICE_DAILY_SESSION_LIMIT` | 40 | Calls per UTC day, across all visitors |
+| `VOICE_HOURLY_SESSIONS_PER_VISITOR` | 4 | Calls per IP address per hour |
+| `VOICE_AVATAR_CHARACTER` / `VOICE_AVATAR_STYLE` | `lisa` / `casual-sitting` | Avatar shown on the page |
+| `VOICE_ALLOWED_ORIGINS` | (any) | Comma-separated origins allowed to open the WebSocket |
+
+If the avatar can't connect (for example on a network that blocks WebRTC), the call continues with
+voice only.
+
 ### Continuous deployment from GitHub
 
 ```bash
@@ -127,6 +164,8 @@ app/
   repository.py    In-memory store loaded from data/seed.json
   security.py      Optional x-api-key check (pure ASGI, streaming-safe)
   telemetry.py     Application Insights setup and per-tool MCP spans
+  voice.py         Public voice demo: Voice Live relay with call limits
+  static/          "Talk to Sam" page (HTML, CSS, mic capture, WebRTC avatar)
   data/seed.json   Fictional customers, policies, billing, claims
 infra/             Bicep for Container Apps, ACR, Log Analytics, Application Insights, managed identity
 docs/              Foundry agent instructions and demo script

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Talk to Sam · AI insurance voice agent</title>
+  <meta name="description" content="A live voice and avatar AI agent for insurance claims and policy service, built on Microsoft Foundry, Azure Voice Live and a custom MCP server.">
+  <meta property="og:title" content="Talk to Sam: an AI voice agent for insurance claims">
+  <meta property="og:description" content="Call a live AI agent that verifies callers, checks coverage, and files claims through MCP tools. Built on Microsoft Foundry and Azure.">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="top">
+    <span class="brand">Contoso Mutual <small>demo</small></span>
+    <nav><a href="#how">How it works</a><a href="/docs">API</a><a href="https://github.com/arulvelk/insurance-mcp-api">GitHub</a></nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="pitch">
+        <p class="eyebrow">Live AI voice agent</p>
+        <h1>Talk to Sam about a claim, your coverage, or your bill.</h1>
+        <p class="lede">Sam is a voice and avatar agent for an insurance service line. It verifies callers,
+          looks up policies, checks coverage and files claims by calling real API tools while you talk.</p>
+
+        <div class="try">
+          <h2>Try it as a demo customer</h2>
+          <p>All data is fictional. Pretend to be one of these callers:</p>
+          <table>
+            <thead><tr><th>Caller</th><th>Policy</th><th>Date of birth</th><th>ZIP</th></tr></thead>
+            <tbody>
+              <tr><td>Maria Gonzalez</td><td>AUT-100234</td><td>Mar 14, 1985</td><td>60614</td></tr>
+              <tr><td>James Carter</td><td>AUT-100512</td><td>Nov 2, 1972</td><td>78701</td></tr>
+              <tr><td>Priya Raman</td><td>REN-300045</td><td>Jul 21, 1990</td><td>98109</td></tr>
+            </tbody>
+          </table>
+          <p class="hint">Ask things like “What's the status of my car claim?”, “How much do I owe?”, or
+            “I backed into a pole yesterday, can I file a claim?”</p>
+        </div>
+      </div>
+
+      <div class="stage" id="stage" data-state="idle">
+        <div class="screen">
+          <video id="avatar" autoplay playsinline></video>
+          <audio id="avatar-audio" autoplay></audio>
+          <div class="placeholder" id="placeholder">
+            <div class="ring"><span>S</span></div>
+            <p>Sam is ready when you are.</p>
+          </div>
+        </div>
+        <p class="caption" id="caption" aria-live="polite"></p>
+        <div class="controls">
+          <button id="call" class="call">Talk to Sam</button>
+          <span class="timer" id="timer"></span>
+        </div>
+        <p class="status" id="status">Uses your microphone. Calls end automatically after a few minutes.</p>
+      </div>
+    </section>
+
+    <section class="how" id="how">
+      <h2>How it works</h2>
+      <ol class="flow">
+        <li><strong>Your browser</strong><span>streams microphone audio and plays the avatar over WebRTC</span></li>
+        <li><strong>Azure Voice Live</strong><span>speech recognition, turn detection, neural voice and avatar</span></li>
+        <li><strong>Microsoft Foundry agent</strong><span>gpt-realtime with the “Sam” persona and guardrails</span></li>
+        <li><strong>MCP server</strong><span>11 tools: verify identity, policies, coverage, billing, claims, callbacks</span></li>
+        <li><strong>Insurance API</strong><span>FastAPI on Azure Container Apps, traced in Application Insights</span></li>
+      </ol>
+    </section>
+  </main>
+
+  <footer>
+    Demo project. Fictional data; nothing you say is stored beyond the call.
+    <a href="https://github.com/arulvelk/insurance-mcp-api">Source on GitHub</a>
+  </footer>
+
+  <script src="/static/app.js" type="module"></script>
+</body>
+</html>

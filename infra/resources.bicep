@@ -3,6 +3,9 @@ param tags object
 param token string
 @secure()
 param apiKey string
+param voiceEndpoint string = ''
+param voiceProjectName string = ''
+param voiceAgentName string = ''
 
 resource logs 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: 'log-${token}'
@@ -68,7 +71,13 @@ resource env 'Microsoft.App/managedEnvironments@2024-03-01' = {
 var appInsightsSecret = [ { name: 'appinsights-connection-string', value: appInsights.properties.ConnectionString } ]
 var appInsightsEnv = [ { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', secretRef: 'appinsights-connection-string' } ]
 var secrets = concat(appInsightsSecret, empty(apiKey) ? [] : [ { name: 'api-key', value: apiKey } ])
-var envVars = concat(appInsightsEnv, empty(apiKey) ? [] : [ { name: 'API_KEY', secretRef: 'api-key' } ])
+var identityEnv = [ { name: 'AZURE_CLIENT_ID', value: identity.properties.clientId } ]
+var voiceEnv = empty(voiceEndpoint) ? [] : [
+  { name: 'VOICE_ENDPOINT', value: voiceEndpoint }
+  { name: 'VOICE_PROJECT_NAME', value: voiceProjectName }
+  { name: 'VOICE_AGENT_NAME', value: voiceAgentName }
+]
+var envVars = concat(appInsightsEnv, identityEnv, voiceEnv, empty(apiKey) ? [] : [ { name: 'API_KEY', secretRef: 'api-key' } ])
 
 resource app 'Microsoft.App/containerApps@2024-03-01' = {
   name: 'ca-insurance-${take(token, 8)}'
@@ -111,5 +120,6 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
 
 output registryLoginServer string = registry.properties.loginServer
 output appName string = app.name
+output identityPrincipalId string = identity.properties.principalId
 output appInsightsName string = appInsights.name
 output appUri string = 'https://${app.properties.configuration.ingress.fqdn}'

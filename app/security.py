@@ -3,6 +3,7 @@
 When the ``API_KEY`` environment variable is set, every request except the public paths
 must send it in the ``x-api-key`` header (or ``Authorization: Bearer <key>``).
 In Foundry, add the key as a custom header on the MCP tool connection.
+WebSockets pass through: the only one is the public voice demo, which ``app.voice`` rate-limits.
 """
 
 from __future__ import annotations
@@ -10,7 +11,7 @@ from __future__ import annotations
 import hmac
 import json
 
-PUBLIC_PATHS = ("/", "/health", "/docs", "/openapi.json", "/redoc")
+PUBLIC_PATHS = ("/", "/health", "/info", "/docs", "/openapi.json", "/redoc", "/voice/config")
 
 
 class ApiKeyMiddleware:
@@ -20,7 +21,7 @@ class ApiKeyMiddleware:
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http" or not self.api_key or scope.get("method") == "OPTIONS" \
-                or scope.get("path", "") in PUBLIC_PATHS or scope.get("path", "").startswith("/docs"):
+                or scope.get("path", "") in PUBLIC_PATHS or scope.get("path", "").startswith(("/docs", "/static/")):
             await self.app(scope, receive, send)
             return
 
