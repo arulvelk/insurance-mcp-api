@@ -280,7 +280,7 @@ async def _pump(ws: WebSocket, upstream, max_seconds: int) -> str:
 
 def _log_problem(raw: str) -> None:
     """Record Voice Live errors and failed responses, which otherwise only reach the visitor's browser."""
-    if '"error"' not in raw and '"failed"' not in raw and '"incomplete"' not in raw:
+    if '"error"' not in raw and '"response.done"' not in raw[:200]:
         return
     try:
         event = json.loads(raw)
@@ -291,9 +291,9 @@ def _log_problem(raw: str) -> None:
         log.warning("Voice Live error: %s", json.dumps(event.get("error"))[:2000])
     elif kind == "response.done":
         response = event.get("response") or {}
-        if response.get("status") not in ("completed", "cancelled"):
-            log.warning("Voice Live response %s: %s", response.get("status"),
-                        json.dumps(response.get("status_details"))[:2000])
+        if response.get("status") not in ("completed", "cancelled") or not response.get("output"):
+            log.warning("Voice Live response %s with %d output items: %s", response.get("status"),
+                        len(response.get("output") or []), json.dumps(response)[:4000])
 
 
 async def _end(ws: WebSocket, reason: str, message: str) -> None:

@@ -87,7 +87,7 @@ class Call {
   }
 
   onEvent(event) {
-    if (!event.type.endsWith(".delta")) console.debug("[voice]", event.type, event);
+    if (!event.type.endsWith(".delta")) console.log("[voice]", event.type, JSON.stringify(event).slice(0, 4000));
     switch (event.type) {
       case "demo.ready":
         this.startTimer(event.max_session_seconds);
