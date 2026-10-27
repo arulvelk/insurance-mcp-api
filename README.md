@@ -102,7 +102,7 @@ Requests and dependencies are collected automatically, and each MCP tool call ap
 
 The app's home page (`/`) is a public "Talk to Sam" page: visitors talk to your Foundry voice agent,
 with its avatar, straight from the browser. The browser streams microphone audio to `/voice/ws`, and
-the app relays it to Azure Voice Live in agent mode using its managed identity, so no Azure key or
+the app relays it to the Foundry voice agent's realtime endpoint using its managed identity, so no Azure key or
 token ever reaches the visitor. The relay only forwards audio, interruptions and the avatar handshake;
 visitors can't change the agent's instructions or tools.
 
@@ -129,10 +129,10 @@ Because the page is public, every call is capped. Defaults, overridable as conta
 | `VOICE_MAX_CONCURRENT_SESSIONS` | 2 | Simultaneous callers |
 | `VOICE_DAILY_SESSION_LIMIT` | 40 | Calls per UTC day, across all visitors |
 | `VOICE_HOURLY_SESSIONS_PER_VISITOR` | 4 | Calls per IP address per hour |
-| `VOICE_AVATAR_CHARACTER` / `VOICE_AVATAR_STYLE` | `meg` / `business` | Avatar shown on the page |
 | `VOICE_ALLOWED_ORIGINS` | (any) | Comma-separated origins allowed to open the WebSocket |
 
-If the avatar can't connect (for example on a network that blocks WebRTC), the call continues with
+The voice, avatar, greeting and instructions all come from the agent's configuration in Foundry;
+change them there. If the avatar can't connect (for example on a network that blocks WebRTC), the call continues with
 voice only.
 
 ### Continuous deployment from GitHub

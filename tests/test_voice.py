@@ -14,18 +14,9 @@ CONFIG = VoiceConfig(endpoint="https://arul1.services.ai.azure.com", agent_name=
                      project_name="proj-default", max_session_seconds=5)
 
 
-def test_upstream_url_uses_agent_mode():
-    url = CONFIG.upstream_url()
-    assert url.startswith("wss://arul1.services.ai.azure.com/voice-live/realtime?")
-    assert "agent-name=sam-agent" in url and "agent-project-name=proj-default" in url
-    assert "api-version=" in url and "model=" not in url
-
-
-def test_session_update_only_sets_audio_and_avatar():
-    session = CONFIG.session_update(avatar=True)["session"]
-    assert session["avatar"] == {"character": "meg", "style": "business"}
-    assert "instructions" not in session and "voice" not in session
-    assert "avatar" not in CONFIG.session_update(avatar=False)["session"]
+def test_upstream_url_targets_the_voice_agent():
+    assert CONFIG.upstream_url() == ("wss://arul1.services.ai.azure.com/api/projects/proj-default/agents/sam-agent"
+                                     "/endpoint/protocols/voice?api-version=v1")
 
 
 @pytest.mark.parametrize("event, expected", [
@@ -103,7 +94,7 @@ class FakeTokens:
 
 def _app(service, upstream, config=CONFIG):
     async def opener(url, token):
-        assert token == "token" and "agent-name=sam-agent" in url
+        assert token == "token" and url == CONFIG.upstream_url()
         return upstream
     return create_app(service, voice_config=config, voice_tokens=FakeTokens(), voice_opener=opener)
 
@@ -120,11 +111,11 @@ def test_relay_forwards_filtered_events_and_redacts(service):
         ws.send_text(json.dumps({"type": "response.cancel"}))
         # The relay sends the cancel after the append; wait until both arrive.
         for _ in range(200):
-            if len(upstream.sent) >= 3:
+            if len(upstream.sent) >= 2:
                 break
             time.sleep(0.01)
-    assert upstream.sent[0]["type"] == "session.update" and "avatar" in upstream.sent[0]["session"]
-    assert [e["type"] for e in upstream.sent[1:]] == ["input_audio_buffer.append", "response.cancel"]
+    # Nothing but the visitor's allowed events: the agent's own session settings are never overridden.
+    assert [e["type"] for e in upstream.sent] == ["input_audio_buffer.append", "response.cancel"]
 
 
 def test_relay_reports_when_not_configured(service):

@@ -1,6 +1,6 @@
-"""Public voice demo: relays the browser's WebSocket to Azure Voice Live in Foundry agent mode.
+"""Public voice demo: relays the browser's WebSocket to the Foundry voice agent's realtime endpoint.
 
-The page talks to ``/voice/ws``; this module opens the matching Voice Live session with the
+The page talks to ``/voice/ws``; this module opens the matching voice agent session with the
 container app's managed identity, so visitors never hold an Azure credential. Because anyone can
 open the page, the relay only forwards the few client events the page needs and enforces a session
 length, a concurrency cap, a daily cap and a per-visitor hourly cap to keep the bill predictable.
@@ -18,11 +18,12 @@ from collections import defaultdict, deque
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Callable
-from urllib.parse import urlencode, urlparse
+from urllib.parse import quote, urlencode, urlparse
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 TOKEN_SCOPE = "https://ai.azure.com/.default"
+VOICE_AGENT_FEATURE = "VoiceAgents=V1Preview"  # opt-in header the realtime route requires while in preview
 MAX_AUDIO_CHUNK = 256_000  # base64 chars, about 2.6 s of 24 kHz pcm16
 REDACTED_SESSION_KEYS = ("instructions", "tools")
 
@@ -34,10 +35,7 @@ class VoiceConfig:
     endpoint: str = ""
     agent_name: str = ""
     project_name: str = ""
-    agent_version: str = ""
-    api_version: str = "2026-07-15"
-    avatar_character: str = "meg"
-    avatar_style: str = "business"
+    api_version: str = "v1"
     max_session_seconds: int = 180
     max_concurrent_sessions: int = 2
     daily_session_limit: int = 40
@@ -56,10 +54,7 @@ class VoiceConfig:
             endpoint=env("VOICE_ENDPOINT", ""),
             agent_name=env("VOICE_AGENT_NAME", ""),
             project_name=env("VOICE_PROJECT_NAME", ""),
-            agent_version=env("VOICE_AGENT_VERSION", ""),
             api_version=env("VOICE_API_VERSION", cls.api_version),
-            avatar_character=env("VOICE_AVATAR_CHARACTER", cls.avatar_character),
-            avatar_style=env("VOICE_AVATAR_STYLE", cls.avatar_style),
             max_session_seconds=int(env("VOICE_MAX_SESSION_SECONDS", cls.max_session_seconds)),
             max_concurrent_sessions=int(env("VOICE_MAX_CONCURRENT_SESSIONS", cls.max_concurrent_sessions)),
             daily_session_limit=int(env("VOICE_DAILY_SESSION_LIMIT", cls.daily_session_limit)),
@@ -68,28 +63,16 @@ class VoiceConfig:
         )
 
     def upstream_url(self) -> str:
-        """Voice Live WebSocket URL in agent mode (same query parameters the azure-ai-voicelive SDK sends)."""
-        parsed = urlparse(self.endpoint if "://" in self.endpoint else f"https://{self.endpoint}")
-        params = {"api-version": self.api_version, "agent-name": self.agent_name,
-                  "agent-project-name": self.project_name}
-        if self.agent_version:
-            params["agent-version"] = self.agent_version
-        return f"wss://{parsed.netloc}{parsed.path.rstrip('/')}/voice-live/realtime?{urlencode(params)}"
+        """Realtime route of a Foundry voice agent (``kind: voice``), as the azure-ai-projects SDK builds it.
 
-    def session_update(self, avatar: bool) -> dict[str, Any]:
-        """Audio formats the page uses, plus the avatar when the visitor's browser can show video.
-
-        The agent's voice, instructions and tools stay as configured in Foundry.
+        The agent keeps its own model, instructions, voice, avatar and turn detection, so the relay
+        never sends ``session.update``.
         """
-        session: dict[str, Any] = {
-            "modalities": ["text", "audio"],
-            "input_audio_format": "pcm16",
-            "output_audio_format": "pcm16",
-            "input_audio_sampling_rate": 24000,
-        }
-        if avatar:
-            session["avatar"] = {"character": self.avatar_character, "style": self.avatar_style}
-        return {"type": "session.update", "session": session}
+        parsed = urlparse(self.endpoint if "://" in self.endpoint else f"https://{self.endpoint}")
+        project = quote(self.project_name, safe="")
+        agent = quote(self.agent_name, safe="")
+        return (f"wss://{parsed.netloc}/api/projects/{project}/agents/{agent}/endpoint/protocols/voice"
+                f"?{urlencode({'api-version': self.api_version})}")
 
 
 class SessionLimiter:
@@ -197,9 +180,11 @@ class AzureTokenProvider:
 
 async def _open_upstream(url: str, token: str):
     from websockets.asyncio.client import connect
+    from websockets.typing import Subprotocol
 
-    return await connect(url, additional_headers={"Authorization": f"Bearer {token}"},
-                         max_size=None, open_timeout=15)
+    return await connect(url, additional_headers={"Authorization": f"Bearer {token}",
+                                                  "Foundry-Features": VOICE_AGENT_FEATURE},
+                         subprotocols=[Subprotocol("realtime")], max_size=None, open_timeout=15)
 
 
 def build_voice_router(config: VoiceConfig, limiter: SessionLimiter, tokens: AzureTokenProvider,
@@ -233,7 +218,6 @@ def build_voice_router(config: VoiceConfig, limiter: SessionLimiter, tokens: Azu
                 await _end(ws, "error", f"Couldn't reach the voice service ({type(exc).__name__}).")
                 return
             async with upstream:
-                await upstream.send(json.dumps(config.session_update(want_avatar)))
                 await ws.send_json({"type": "demo.ready", "max_session_seconds": config.max_session_seconds,
                                     "avatar": want_avatar})
                 outcome = await _pump(ws, upstream, config.max_session_seconds)

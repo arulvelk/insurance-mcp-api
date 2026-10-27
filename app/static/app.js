@@ -96,6 +96,7 @@ class Call {
       case "demo.ended":
         this.finish(event.message);
         break;
+      case "session.created":
       case "session.updated": {
         const ice = event.session && event.session.avatar && event.session.avatar.ice_servers;
         if (this.wantAvatar && ice && !this.pc) this.connectAvatar(ice);
