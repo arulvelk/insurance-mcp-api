@@ -145,7 +145,7 @@ def browser_audio_fix(raw: str) -> dict[str, Any] | None:
 
     With server echo cancellation fed by a *client* reference, every input packet must interleave
     the microphone with the audio being played. A browser sends plain mono microphone audio (and
-    cancels the echo itself), so the service would hear no speech; turn that mode off for this call.
+    cancels the echo itself), so the service would hear no speech; use a server reference instead.
     """
     if '"session.updated"' not in raw[:200] or '"echo_cancellation"' not in raw:
         return None
@@ -156,8 +156,10 @@ def browser_audio_fix(raw: str) -> dict[str, Any] | None:
         return None
     if echo.get("reference_source") != "client":
         return None
-    return {"type": "session.update",
-            "session": {"type": "realtime", "audio": {"input": {"echo_cancellation": None}}}}
+    # The service ignores a null here, so switch the reference to its own playback, which works
+    # with the single microphone channel a browser sends.
+    return {"type": "session.update", "session": {"type": "realtime", "audio": {"input": {
+        "echo_cancellation": {"type": "server_echo_cancellation", "reference_source": "server", "channels": 1}}}}}
 
 
 def redact_server_event(raw: str) -> str:
@@ -259,11 +261,14 @@ async def _pump(ws: WebSocket, upstream, max_seconds: int) -> str:
                 await upstream.send(json.dumps(event))
 
     async def from_azure():
+        fixed = False
         async for message in upstream:
             if isinstance(message, str):
                 _log_problem(message)
-                fix = browser_audio_fix(message)
+                fix = None if fixed else browser_audio_fix(message)
                 if fix is not None:
+                    # Once per call: if the service doesn't apply it, resending would just loop.
+                    fixed = True
                     await upstream.send(json.dumps(fix))
                 await ws.send_text(redact_server_event(message))
 

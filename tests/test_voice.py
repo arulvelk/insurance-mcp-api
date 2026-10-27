@@ -148,8 +148,17 @@ def test_client_reference_echo_cancellation_is_turned_off():
     def updated(echo):
         return json.dumps({"type": "session.updated", "session": {"audio": {"input": {"echo_cancellation": echo}}}})
     fix = browser_audio_fix(updated({"type": "server_echo_cancellation", "reference_source": "client", "channels": 2}))
-    assert fix == {"type": "session.update",
-                   "session": {"type": "realtime", "audio": {"input": {"echo_cancellation": None}}}}
+    assert fix["session"]["audio"]["input"]["echo_cancellation"]["reference_source"] == "server"
     assert browser_audio_fix(updated({"type": "server_echo_cancellation", "reference_source": "server"})) is None
     assert browser_audio_fix(updated(None)) is None
     assert browser_audio_fix(json.dumps({"type": "response.done"})) is None
+
+
+def test_echo_fix_is_sent_once_per_call(service):
+    echo = {"type": "server_echo_cancellation", "reference_source": "client", "channels": 2}
+    updated = {"type": "session.updated", "session": {"audio": {"input": {"echo_cancellation": echo}}}}
+    upstream = FakeUpstream([updated, updated, updated])
+    with TestClient(_app(service, upstream)) as client, client.websocket_connect("/voice/ws") as ws:
+        for _ in range(4):
+            ws.receive_json()
+    assert [e["type"] for e in upstream.sent] == ["session.update"]

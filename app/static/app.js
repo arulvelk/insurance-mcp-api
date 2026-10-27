@@ -61,6 +61,7 @@ class Call {
     this.avatarLive = false;
     this.wantAvatar = "RTCPeerConnection" in window;
     this.sawResponse = false;
+    this.inputChannels = 1;
     this.ended = false;
     this.timer = null;
   }
@@ -101,6 +102,7 @@ class Call {
       case "session.updated": {
         // session.created carries service defaults; the agent's own settings (avatar included)
         // follow in session.updated, so give that a moment before falling back to voice only.
+        this.trackInputChannels(event.session);
         const ice = event.session && event.session.avatar && event.session.avatar.ice_servers;
         if (this.wantAvatar && ice && !this.pc) this.connectAvatar(ice);
         else if (!this.wantAvatar || event.type === "session.updated") {
@@ -140,6 +142,15 @@ class Call {
         this.showProblem("Voice service error", event.error);
         break;
     }
+  }
+
+  // Server echo cancellation with a client reference expects interleaved channels (microphone
+  // first). The browser already removes Sam's voice from the mic, so the reference stays silent.
+  trackInputChannels(session) {
+    const input = session && session.audio && session.audio.input;
+    if (!input || !("echo_cancellation" in input)) return;
+    const echo = input.echo_cancellation;
+    this.inputChannels = echo && echo.reference_source === "client" ? (echo.channels || 2) : 1;
   }
 
   showProblem(title, details) {
@@ -208,7 +219,10 @@ class Call {
     await this.micContext.audioWorklet.addModule("/static/mic-worklet.js");
     const source = this.micContext.createMediaStreamSource(this.mic);
     const node = new AudioWorkletNode(this.micContext, "mic-processor");
-    node.port.onmessage = (e) => this.send({ type: "input_audio_buffer.append", audio: toBase64(e.data) });
+    node.port.onmessage = (e) => {
+      const audio = this.inputChannels === 1 ? e.data : withSilentReference(e.data, this.inputChannels);
+      this.send({ type: "input_audio_buffer.append", audio: toBase64(audio) });
+    };
     source.connect(node);
     if (!this.avatarLive) this.player = new Player();
 
@@ -288,6 +302,13 @@ class Player {
     this.stop();
     this.context.close();
   }
+}
+
+function withSilentReference(monoBuffer, channels) {
+  const mono = new Int16Array(monoBuffer);
+  const out = new Int16Array(mono.length * channels);
+  for (let i = 0; i < mono.length; i++) out[i * channels] = mono[i];
+  return out.buffer;
 }
 
 function waitForIceGathering(pc, timeoutMs) {
