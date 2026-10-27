@@ -95,13 +95,25 @@
     // Show the recording if one has been added; otherwise just the screenshot.
     const video = document.getElementById("video");
     const still = document.getElementById("still");
+    const watch = document.getElementById("watch");
     let hasVideo = true;
-    video.querySelector("source").addEventListener("error", () => {
+    function noVideo() {
+      if (!hasVideo) return;
       hasVideo = false;
       video.hidden = true;
       still.hidden = false;
-      document.getElementById("watch").textContent = "See it in action";
+      watch.textContent = "See a screenshot";
+      watch.href = still.src;
+      watch.target = "_blank";
       if (live.hidden && note.dataset.offline) offline();
+    }
+    video.querySelector("source").addEventListener("error", noVideo);
+    if (video.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) noVideo();  // failed before this script ran
+    watch.addEventListener("click", (e) => {
+      if (!hasVideo) return;
+      e.preventDefault();
+      video.scrollIntoView({ behavior: "smooth", block: "center" });
+      video.play();
     });
 
     // The live demo runs on an Azure subscription that may be switched off. Offer it only when it answers.
