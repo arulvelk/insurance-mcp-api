@@ -6,18 +6,24 @@ business logic is exposed two ways:
 - **REST API** at `/api/...` with Swagger UI at `/docs`
 - **MCP server** (Streamable HTTP) at `/mcp`, ready to plug into a **Microsoft Foundry voice agent**
   as an MCP tool
+- **Public "Talk to Sam" page** at `/`, where anyone can talk to that voice agent, avatar included,
+  from the browser
 
 Every response includes a short `summary` written to be spoken aloud, which keeps realtime voice
 agents (e.g. `gpt-realtime`) fast and natural.
 
 ```
-Caller ── voice ──▶ Foundry agent (gpt-realtime + Azure voice)
-                          │  MCP over HTTPS (/mcp, x-api-key)
-                          ▼
-              Azure Container Apps: FastAPI + FastMCP
-                          │
-                   InsuranceService ──▶ in-memory seed data (swap for Cosmos DB / SQL)
+Browser (/) ── mic over WebSocket ──▶ /voice/ws relay (managed identity, call limits)
+   ▲                                          │
+   └── avatar video + voice over WebRTC ──── Foundry voice agent (gpt-realtime, HD voice, avatar)
+                                              │  MCP over HTTPS (/mcp, x-api-key)
+                                              ▼
+                              Azure Container Apps: FastAPI + FastMCP
+                                              │
+                                InsuranceService ──▶ in-memory seed data (swap for Cosmos DB / SQL)
 ```
+
+The relay, MCP server and REST API are one container app; Application Insights traces all three.
 
 ## MCP tools
 
@@ -89,6 +95,7 @@ No local Docker needed — azd builds the image remotely in Azure Container Regi
 azd auth login
 azd env new insurance-mcp            # any environment name
 azd env set MCP_API_KEY "$(openssl rand -hex 24)"
+# Windows PowerShell: azd env set MCP_API_KEY ([guid]::NewGuid().ToString("N") + [guid]::NewGuid().ToString("N"))
 azd up                               # pick subscription + region
 azd env get-value MCP_ENDPOINT       # e.g. https://ca-insurance-xxxx.<region>.azurecontainerapps.io/mcp
 ```
@@ -106,7 +113,10 @@ the app relays it to the Foundry voice agent's realtime endpoint using its manag
 token ever reaches the visitor. The relay only forwards audio, interruptions and the avatar handshake;
 visitors can't change the agent's instructions or tools.
 
-Point it at your agent, then run `azd up` again:
+It needs a Foundry **voice agent** (`kind: voice`), the kind with a voice, avatar and greeting
+configured in Foundry. The relay connects to that agent's realtime route,
+`/api/projects/<project>/agents/<agent>/endpoint/protocols/voice`. Point it at your agent, then run
+`azd up` again:
 
 ```bash
 azd env set FOUNDRY_RESOURCE_NAME  <foundry-resource>     # e.g. arul1
@@ -117,7 +127,7 @@ azd up
 azd env get-value VOICE_DEMO_URL
 ```
 
-This grants the app's identity **Azure AI User** and **Cognitive Services User** on the Foundry
+This grants the app's identity **Foundry User** (formerly Azure AI User) and **Cognitive Services User** on the Foundry
 resource, so the account running `azd up` needs permission to assign roles there (Owner or User
 Access Administrator).
 
@@ -132,8 +142,19 @@ Because the page is public, every call is capped. Defaults, overridable as conta
 | `VOICE_ALLOWED_ORIGINS` | (any) | Comma-separated origins allowed to open the WebSocket |
 
 The voice, avatar, greeting and instructions all come from the agent's configuration in Foundry;
-change them there. If the avatar can't connect (for example on a network that blocks WebRTC), the call continues with
-voice only.
+change them there. If the avatar can't connect (for example on a network that blocks WebRTC), the call
+continues with voice only.
+
+After code changes, `azd deploy` updates just the app, which is faster than `azd up`.
+
+**Troubleshooting.** The page logs every non-audio event from the agent to the browser console as
+`[voice] <event type> <json>`, and the relay records errors and empty responses in Application Insights.
+- *Sam greets you but never hears you:* turn off **Echo cancellation** in the agent's Advanced settings
+  (see [docs/foundry-agent-instructions.md](docs/foundry-agent-instructions.md#settings)). The relay also
+  asks the service to switch it to a server reference for each call, and the page sends the two-channel
+  audio that mode expects if the setting stays on.
+- *Every response is empty (0 tokens):* the agent isn't a voice agent, or the relay is pointed at the wrong
+  project or agent name.
 
 ### Continuous deployment from GitHub
 
@@ -151,7 +172,7 @@ Every push to `main` then runs tests (`ci.yml`) and redeploys (`azure-dev.yml`).
 3. **Authentication**: key-based, header name `x-api-key`, value = your `MCP_API_KEY`.
 4. **Approval**: set to *never require approval* for the demo, so the voice conversation isn't interrupted.
 5. Paste the instructions and greeting from [docs/foundry-agent-instructions.md](docs/foundry-agent-instructions.md),
-   then **Save** and try it in the voice playground using the demo callers listed there.
+   apply the settings listed there, then **Save** and try it in the voice playground using the demo callers.
 
 ## Project layout
 
@@ -164,12 +185,12 @@ app/
   repository.py    In-memory store loaded from data/seed.json
   security.py      Optional x-api-key check (pure ASGI, streaming-safe)
   telemetry.py     Application Insights setup and per-tool MCP spans
-  voice.py         Public voice demo: Voice Live relay with call limits
+  voice.py         Public voice demo: relay to the Foundry voice agent, with call limits
   static/          "Talk to Sam" page (HTML, CSS, mic capture, WebRTC avatar)
   data/seed.json   Fictional customers, policies, billing, claims
 infra/             Bicep for Container Apps, ACR, Log Analytics, Application Insights, managed identity
 docs/              Foundry agent instructions and demo script
-tests/             pytest: service, REST and MCP tests
+tests/             pytest: service, REST, MCP, telemetry and voice relay tests
 ```
 
 ## Notes
@@ -178,6 +199,8 @@ tests/             pytest: service, REST and MCP tests
   the app runs as a single replica for that reason. Replace `InMemoryRepository` with a Cosmos DB or
   SQL implementation for anything beyond a demo.
 - Identity verification is a demo pattern (DOB + ZIP), not production-grade authentication.
+- The voice page is public and every call costs money (realtime model, neural voice and avatar minutes).
+  Keep the call limits in place, and tighten `VOICE_DAILY_SESSION_LIMIT` if you share the link widely.
 
 ## License
 
